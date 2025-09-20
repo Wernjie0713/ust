@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect } from 'react';
-import BottomNavigation from '../../components/navigation/BottomNavigation';
 
 interface ScanResult {
   binId: string;

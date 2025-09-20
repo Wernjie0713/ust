@@ -2,7 +2,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import RecyclerDashboard from '../components/recycler/RecyclerDashboard';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 export default function RecyclerPage() {
   const router = useRouter();

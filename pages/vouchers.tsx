@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import VoucherRewards from '../components/ecomon/VoucherRewards';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 export default function VouchersPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function VouchersPage() {
 
       <VoucherRewards />
 
-      <BottomNavigation currentPage="vouchers" />
     </div>
   );
 }

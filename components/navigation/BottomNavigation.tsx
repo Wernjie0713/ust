@@ -7,6 +7,9 @@ interface BottomNavigationProps {
   currentPage?: string;
 }
 
+// Navigation height constant for CSS custom property
+export const NAV_HEIGHT = 72; // px
+
 export default function BottomNavigation({ currentPage }: BottomNavigationProps) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -301,24 +304,15 @@ export default function BottomNavigation({ currentPage }: BottomNavigationProps)
             box-shadow: 0 6px 25px rgba(76,175,80,0.7);
           }
         }
-
-        .bottom-nav {
-          position: fixed;
-          bottom: 20px;
-        }
-
-        @media (max-width: 768px) {
-          .bottom-nav {
-            bottom: 80px !important;
-          }
-        }
       `}</style>
       <div
-        ref={navRef}
-        className="bottom-nav"
-        style={{
-          right: isCollapsed ? '20px' : 'auto',
-          left: isCollapsed ? 'auto' : '50%',
+        className="pointer-events-auto fixed z-50 left-1/2 -translate-x-1/2 bottom-[max(env(safe-area-inset-bottom),12px)] w-[min(720px,calc(100vw-24px))]"
+        style={{ height: NAV_HEIGHT }}
+      >
+        <div
+          ref={navRef}
+          className="rounded-2xl shadow-lg ring-1 ring-black/10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75"
+          style={{
           background: isCollapsed
             ? 'rgba(76,175,80,0.9)'
             : 'rgba(255,255,255,0.15)',
@@ -347,8 +341,8 @@ export default function BottomNavigation({ currentPage }: BottomNavigationProps)
           transform: isCollapsed
             ? 'none'
             : isDragging
-              ? `translateX(calc(-50% + ${dragOffset.x}px)) translateY(${dragOffset.y}px) scale(0.95) rotate(${dragOffset.x * 0.1}deg)`
-              : 'translateX(-50%)',
+              ? `translate(${dragOffset.x}px, ${dragOffset.y}px) scale(0.95) rotate(${dragOffset.x * 0.1}deg)`
+              : 'none',
           opacity: isDragging ? 0.7 : 1,
           // Add touch-action to prevent scrolling
           touchAction: 'none',
@@ -432,6 +426,7 @@ export default function BottomNavigation({ currentPage }: BottomNavigationProps)
           {allItems.map(renderNavigationButton)}
         </>
       )}
+        </div>
       </div>
     </>
   );

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import GameHub from '../components/ecomon/GameHub';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 export default function GamePage() {
   const [showNavigation, setShowNavigation] = useState(true);
@@ -12,7 +11,6 @@ export default function GamePage() {
       position: 'relative'
     }}>
       <GameHub onViewChange={(view) => setShowNavigation(view === 'dashboard')} />
-      {showNavigation && <BottomNavigation currentPage="game" />}
     </div>
   );
 }

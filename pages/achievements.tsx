@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 // Dynamically import EnhancedAchievements to prevent SSR issues
 const EnhancedAchievements = dynamic(() => import('../components/ecomon/EnhancedAchievements'), {
@@ -62,8 +61,6 @@ export default function AchievementsPage() {
       </Head>
 
       <EnhancedAchievements />
-
-      <BottomNavigation currentPage="achievements" />
     </div>
   );
 }

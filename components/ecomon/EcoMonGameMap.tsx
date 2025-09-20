@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getCurrentUser, getUserLocation } from '../../utils/auth';
-import BottomNavigation from '../navigation/BottomNavigation';
 import { Threebox } from 'threebox-plugin';
 import { createRoot } from 'react-dom/client';
 import MissionCompleteNotification from '../notifications/MissionCompleteNotification';
@@ -699,29 +698,52 @@ export default function EcoMonGameMap() {
       const location = await getUserLocation();
       setUserLocation(location);
 
-      // Add user marker to map
-      if (map.current) {
-        // Remove existing user marker
-        const existingMarker = document.getElementById('user-marker');
-        if (existingMarker) {
-          existingMarker.remove();
+      // Add user marker to map - with robust null checking
+      let retryCount = 0;
+      const maxRetries = 10;
+
+      const addUserMarkerToMap = () => {
+        if (!map.current) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            console.error('Map failed to initialize after', maxRetries, 'retries. Skipping user marker.');
+            return;
+          }
+          console.warn(`Map not ready (attempt ${retryCount}/${maxRetries}), retrying user marker in 500ms...`);
+          setTimeout(addUserMarkerToMap, 500);
+          return;
         }
 
-        // Create user avatar marker
-        const userMarker = new mapboxgl.Marker({
-          element: createUserAvatarElement(),
-          anchor: 'center'
-        })
-        .setLngLat([location.longitude, location.latitude])
-        .addTo(map.current);
+        try {
+          // Remove existing user marker
+          const existingMarker = document.getElementById('user-marker');
+          if (existingMarker) {
+            existingMarker.remove();
+          }
 
-        // Center map on user location
-        map.current.flyTo({
-          center: [location.longitude, location.latitude],
-          zoom: 16,
-          duration: 2000
-        });
-      }
+          // Create user avatar marker
+          const userMarker = new mapboxgl.Marker({
+            element: createUserAvatarElement(),
+            anchor: 'center'
+          })
+          .setLngLat([location.longitude, location.latitude])
+          .addTo(map.current);
+
+          // Center map on user location
+          map.current.flyTo({
+            center: [location.longitude, location.latitude],
+            zoom: 16,
+            duration: 2000
+          });
+
+          console.log('✅ User marker added to map successfully');
+        } catch (markerError) {
+          console.error('Error adding user marker to map:', markerError);
+        }
+      };
+
+      // Try to add marker immediately, or retry if map isn't ready
+      addUserMarkerToMap();
     } catch (error) {
       console.error('Error getting user location:', error);
       // Fallback to Malaysia center
@@ -1767,7 +1789,6 @@ export default function EcoMonGameMap() {
       <MissionCompleteNotification />
 
       {/* Standard Bottom Navigation */}
-      <BottomNavigation currentPage="recycle" />
     </div>
   );
 }

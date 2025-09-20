@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import UserProfile from '../components/ecomon/UserProfile';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -36,8 +35,6 @@ export default function ProfilePage() {
       </Head>
 
       <UserProfile />
-
-      <BottomNavigation currentPage="profile" />
     </div>
   );
 }

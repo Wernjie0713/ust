@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import CommunityReview from '../components/ecomon/CommunityReview';
-import BottomNavigation from '../components/navigation/BottomNavigation';
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function ReviewPage() {
 
       <CommunityReview />
 
-      <BottomNavigation currentPage="review" />
     </div>
   );
 }
