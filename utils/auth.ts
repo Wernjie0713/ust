@@ -129,9 +129,9 @@ export async function login(email: string, password: string): Promise<{ success:
 /**
  * Register new user
  */
-export async function register(displayName: string, email: string, password: string): Promise<{ success: boolean; error?: string; userDID?: string }> {
+export async function register(displayName: string, email: string, password: string): Promise<{ success: boolean; error?: string; userId?: string }> {
   try {
-    // Create user DID via backend
+    // Create user account via backend
     const response = await fetch('http://localhost:3003/api/identity/user', {
       method: 'POST',
       headers: {
@@ -149,7 +149,7 @@ export async function register(displayName: string, email: string, password: str
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create user DID');
+      throw new Error('Failed to create user account');
     }
 
     const result = await response.json();

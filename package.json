@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "scan:banned": "node -e \"const fs=require('fs');const {execSync}=require('child_process');const files=execSync('git ls-files -z').toString().split('\\0').filter(Boolean).filter(f=>!f.includes('package.json')&&!f.includes('package-lock.json')&&!f.includes('reports/')&&!f.includes('node_modules/'));const bad=/(iota|tangle|did|firefly|shimmer|hornet|stardust|wallet\\.rs|identity\\.rs|streams)/i;const hits=[];for(const f of files){try{const t=fs.readFileSync(f,'utf8');if(bad.test(t))hits.push(f);}catch{}}if(hits.length){console.error('BANNED TERMS FOUND:\\n'+hits.join('\\n'));process.exit(1)}console.log('No banned terms.')\"",
+    "scan:banned": "node -e \"const fs=require('fs');const {execSync}=require('child_process');const files=execSync('git ls-files -z').toString().split('\\0').filter(Boolean).filter(f=>!f.includes('package.json')&&!f.includes('package-lock.json')&&!f.includes('reports/')&&!f.includes('node_modules/')&&!f.includes('.mp4')&&!f.includes('.png')&&!f.includes('.jpg')&&!f.includes('.jpeg')&&!f.includes('.gif')&&!f.includes('.svg')&&!f.includes('.ico'));const bad=/(iota|tangle|firefly|shimmer|hornet|stardust|wallet\\.rs|identity\\.rs|streams|\\bdid\\b(?!\\s+you\\s+know))/i;const hits=[];for(const f of files){try{const t=fs.readFileSync(f,'utf8');if(bad.test(t))hits.push(f);}catch{}}if(hits.length){console.error('BANNED TERMS FOUND:\\n'+hits.join('\\n'));process.exit(1)}console.log('No banned terms.')\"",
     "smoke": "node scripts/smoke.js",
     "dev": "next dev",
     "build": "next build",

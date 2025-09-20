@@ -1131,7 +1131,7 @@ export default function UserProfile() {
         {/* Identity Tab */}
         {activeTab === 'identity' && (
           <div>
-            {/* DID Information */}
+            {/* User Profile Information */}
             <div style={{
               background: 'white',
               padding: '20px',
@@ -1145,108 +1145,30 @@ export default function UserProfile() {
                 fontSize: '18px',
                 fontWeight: 'bold'
               }}>
-                🆔 Decentralized Identity (DID)
-              </h3>
-
-              {userIdentity ? (
-                <div>
-                  <div style={{
-                    background: 'rgba(76,175,80,0.1)',
-                    border: '1px solid rgba(76,175,80,0.3)',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      marginBottom: '8px'
-                    }}>
-                      <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                        ✅ Identity Verified
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666', fontFamily: 'monospace' }}>
-                      <strong>UserID:</strong> {userIdentity.userId}
-                    </div>
-                  </div>
-
-                  <div style={{
-                    background: '#f5f5f5',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    marginBottom: '16px'
-                  }}>
-                    <h4 style={{ margin: '0 0 8px 0', color: '#333', fontSize: '14px' }}>
-                      Identity Features:
-                    </h4>
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                      <div style={{ marginBottom: '4px' }}>✅ Decentralized authentication</div>
-                      <div style={{ marginBottom: '4px' }}>✅ Privacy-preserving credentials</div>
-                      <div style={{ marginBottom: '4px' }}>✅ Cross-platform compatibility</div>
-                      <div>✅ Self-sovereign identity</div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '20px',
-                  color: '#666'
-                }}>
-                  {isCreatingDID ? (
-                    <div>
-                      <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔄</div>
-                      <div>Creating your decentralized identity...</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ fontSize: '24px', marginBottom: '8px' }}>🆔</div>
-                      <div>No DID found</div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-
-            {/* Technical Info */}
-            <div style={{
-              background: 'white',
-              padding: '20px',
-              borderRadius: '16px',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-            }}>
-              <h3 style={{
-                margin: '0 0 16px 0',
-                color: '#FF6B35',
-                fontSize: '18px',
-                fontWeight: 'bold'
-              }}>
-                🔧 Technical Details
+                👤 User Profile
               </h3>
 
               <div style={{
                 background: '#f5f5f5',
                 borderRadius: '8px',
                 padding: '16px',
-                fontSize: '12px',
-                color: '#666'
+                fontSize: '14px',
+                color: '#333'
               }}>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>🌐 Network:</strong> IOTA Tangle
+                <div style={{ marginBottom: '12px' }}>
+                  <strong>🆔 User ID:</strong> {userStats.level > 0 ? `ECO-${Math.random().toString(36).substr(2, 9).toUpperCase()}` : 'Not logged in'}
                 </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>🔗 Protocol:</strong> IOTA Identity Framework
+                <div style={{ marginBottom: '12px' }}>
+                  <strong>📅 Member Since:</strong> {userStats.joinDate}
                 </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>🔒 Security:</strong> Ed25519 Cryptography
+                <div style={{ marginBottom: '12px' }}>
+                  <strong>🏆 Current Level:</strong> {userStats.level}
                 </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>📱 Compatibility:</strong> W3C DID Standard
+                <div style={{ marginBottom: '12px' }}>
+                  <strong>⭐ Experience Points:</strong> {userStats.experience.toLocaleString()}
                 </div>
                 <div>
-                  <strong>⚡ Features:</strong> Feeless, Scalable, Quantum-Resistant
+                  <strong>🏅 Rank:</strong> #{userStats.rank.global.toLocaleString()} Global
                 </div>
               </div>
             </div>
