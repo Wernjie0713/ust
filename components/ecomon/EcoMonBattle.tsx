@@ -18,17 +18,49 @@ interface BattleEcoMon {
   abilities: BattleAbility[];
   avatar: string;
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  shield?: number;             // NEW temp HP
+  mods?: TimedModifier[];      // NEW active buffs/debuffs
+  status?: Status[];           // NEW active statuses
+}
+
+// Effect System Types
+type EffectKind = 'damage' | 'heal' | 'shield' | 'buff' | 'debuff' | 'status' | 'energy';
+type Stat = 'attack' | 'defense' | 'speed' | 'hp';
+
+interface AbilityEffect {
+  kind: EffectKind;
+  target: 'self' | 'enemy';
+  value?: number;          // flat value, e.g., 20 damage, 30 shield, 10 heal
+  scale?: number;          // scale with caster stat (e.g., 0.6 * attack)
+  stat?: Stat;             // for buff/debuff
+  duration?: number;       // turns for buff/debuff/status
+  statusName?: 'bleed' | 'regen' | 'overload' | 'rust' | 'crack';
+  chance?: number;         // 0..1 RNG gate
+}
+
+interface TimedModifier {
+  stat: Stat;            // e.g., 'attack'
+  amountPct: number;     // +0.25 = +25%, -0.2 = -20%
+  turnsLeft: number;
+}
+
+interface Status {
+  name: 'bleed' | 'regen' | 'overload' | 'rust' | 'crack';
+  value?: number;        // DOT/HOT tick amount (optional)
+  turnsLeft: number;
 }
 
 interface BattleAbility {
   id: string;
   name: string;
   description: string;
-  damage: number;
   energyCost: number;
   type: 'attack' | 'defense' | 'heal' | 'special';
   element: string;
   animation: string;
+  accuracy?: number;
+  critChance?: number;
+  effects?: AbilityEffect[]; // NEW
 }
 
 interface BattleState {
@@ -60,48 +92,62 @@ const BATTLE_ECOMONS: BattleEcoMon[] = [
     attack: 85,
     defense: 70,
     speed: 75,
-    avatar: '🦎',
+    avatar: '/assets/m1.png',
     rarity: 'rare',
+    shield: 0,
+    mods: [],
+    status: [],
     abilities: [
       {
         id: 'plastic_chomp',
         name: 'Plastic Chomp',
         description: 'Devours plastic waste to deal damage',
-        damage: 25,
         energyCost: 1,
         type: 'attack',
         element: 'plastic',
-        animation: '🦎💥'
+        animation: '🦎💥',
+        effects: [
+          { kind: 'damage', target: 'enemy', value: 18, scale: 0.5 },
+          { kind: 'debuff', target: 'enemy', stat: 'defense', value: 15, duration: 2, chance: 0.35 }
+        ]
       },
       {
         id: 'polymer_blast',
         name: 'Polymer Blast',
         description: 'Explosive polymer breakdown attack',
-        damage: 45,
         energyCost: 2,
         type: 'attack',
         element: 'plastic',
-        animation: '💥🌪️'
+        animation: '💥🌪️',
+        effects: [
+          { kind: 'damage', target: 'enemy', value: 32, scale: 0.7 },
+          { kind: 'status', target: 'enemy', statusName: 'overload', duration: 1, chance: 0.35 }
+        ]
       },
       {
         id: 'eco_shield',
         name: 'Eco Shield',
         description: 'Creates a protective barrier from recycled materials',
-        damage: 0,
         energyCost: 1,
         type: 'defense',
         element: 'neutral',
-        animation: '🛡️✨'
+        animation: '🛡️✨',
+        effects: [
+          { kind: 'shield', target: 'self', value: 30 }
+        ]
       },
       {
         id: 'regenerate',
         name: 'Regenerate',
         description: 'Heals by absorbing environmental energy',
-        damage: -30,
         energyCost: 2,
         type: 'heal',
         element: 'nature',
-        animation: '🌱💚'
+        animation: '🌱💚',
+        effects: [
+          { kind: 'heal', target: 'self', value: 10, scale: 0.3 },
+          { kind: 'status', target: 'self', statusName: 'regen', value: 6, duration: 2 }
+        ]
       }
     ]
   },
@@ -115,8 +161,11 @@ const BATTLE_ECOMONS: BattleEcoMon[] = [
     attack: 95,
     defense: 90,
     speed: 60,
-    avatar: '🦾',
+    avatar: '/assets/m2.png',
     rarity: 'epic',
+    shield: 0,
+    mods: [],
+    status: [],
     abilities: [
       {
         id: 'metal_slam',
@@ -170,8 +219,11 @@ const BATTLE_ECOMONS: BattleEcoMon[] = [
     attack: 110,
     defense: 60,
     speed: 95,
-    avatar: '💎',
+    avatar: '/assets/m3.png',
     rarity: 'legendary',
+    shield: 0,
+    mods: [],
+    status: [],
     abilities: [
       {
         id: 'crystal_shard',
@@ -229,48 +281,61 @@ const OPPONENT_ECOMONS: BattleEcoMon[] = [
     attack: 70,
     defense: 50,
     speed: 85,
-    avatar: '📄',
+    avatar: '/assets/m4.png',
     rarity: 'uncommon',
+    shield: 0,
+    mods: [],
+    status: [],
     abilities: [
       {
         id: 'paper_cut',
         name: 'Paper Cut',
         description: 'Quick slicing attack with paper edges',
-        damage: 20,
         energyCost: 1,
         type: 'attack',
         element: 'paper',
-        animation: '📄💨'
+        animation: '📄💨',
+        effects: [
+          { kind: 'damage', target: 'enemy', value: 15, scale: 0.4 },
+          { kind: 'status', target: 'enemy', statusName: 'bleed', value: 3, duration: 2, chance: 0.4 }
+        ]
       },
       {
         id: 'pulp_storm',
         name: 'Pulp Storm',
         description: 'Overwhelms opponent with paper pulp',
-        damage: 35,
         energyCost: 2,
         type: 'attack',
         element: 'paper',
-        animation: '🌪️📄'
+        animation: '🌪️📄',
+        effects: [
+          { kind: 'damage', target: 'enemy', value: 28, scale: 0.6 },
+          { kind: 'debuff', target: 'enemy', stat: 'speed', value: 20, duration: 2 }
+        ]
       },
       {
         id: 'fiber_bind',
         name: 'Fiber Bind',
         description: 'Binds opponent with paper fibers',
-        damage: 0,
         energyCost: 1,
         type: 'defense',
         element: 'paper',
-        animation: '🕸️📄'
+        animation: '🕸️📄',
+        effects: [
+          { kind: 'debuff', target: 'enemy', stat: 'speed', value: 25, duration: 1 }
+        ]
       },
       {
         id: 'recycle_heal',
         name: 'Recycle Heal',
         description: 'Heals by recycling damaged paper',
-        damage: -25,
         energyCost: 2,
         type: 'heal',
         element: 'nature',
-        animation: '♻️💚'
+        animation: '♻️💚',
+        effects: [
+          { kind: 'heal', target: 'self', value: 20, scale: 0.3 }
+        ]
       }
     ]
   }
@@ -279,6 +344,155 @@ const OPPONENT_ECOMONS: BattleEcoMon[] = [
 interface EcoMonBattleProps {
   onReturnToHub?: () => void;
 }
+
+// Helper function to render avatar (handles both images and emojis)
+const renderAvatar = (avatar: string, size: string = '80px', additionalStyles: any = {}) => {
+  // Check if it's an image path (starts with '/')
+  if (avatar.startsWith('/')) {
+    return (
+      <img
+        src={avatar}
+        alt="EcoMon"
+        style={{
+          width: size,
+          height: size,
+          objectFit: 'cover',
+          borderRadius: '50%',
+          ...additionalStyles
+        }}
+      />
+    );
+  }
+
+  // Otherwise render as emoji
+  return (
+    <div style={{
+      fontSize: size,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...additionalStyles
+    }}>
+      {avatar}
+    </div>
+  );
+};
+
+// Effects System Helper Functions
+function getModifiedStat(mon: BattleEcoMon, stat: Stat) {
+  const base = (mon as any)[stat] as number;
+  const mods = mon.mods || [];
+  const pct = mods.filter(m => m.stat === stat).reduce((a, m) => a + m.amountPct, 0);
+  return Math.max(1, Math.floor(base * (1 + pct)));
+}
+
+function applyDamage(target: BattleEcoMon, raw: number) {
+  let dmg = Math.max(0, raw);
+  const shield = target.shield || 0;
+  if (shield > 0) {
+    const after = Math.max(0, shield - dmg);
+    dmg = Math.max(0, dmg - shield);
+    target.shield = after;
+  }
+  target.hp = Math.max(0, target.hp - dmg);
+}
+
+function tickStatuses(mon: BattleEcoMon, log: string[]) {
+  if (!mon.status || mon.status.length === 0) return;
+  const keep: Status[] = [];
+  for (const s of mon.status) {
+    if (s.name === 'bleed' || s.name === 'rust') {
+      const v = s.value || 0;
+      if (v > 0) {
+        applyDamage(mon, v);
+        log.push(`${mon.name} suffers ${v} from ${s.name}.`);
+      }
+    }
+    if (s.name === 'regen') {
+      const v = s.value || 0;
+      if (v > 0) {
+        mon.hp = Math.min((mon as any).maxHp || mon.hp, mon.hp + v);
+        log.push(`${mon.name} restores ${v} from regen.`);
+      }
+    }
+    s.turnsLeft -= 1;
+    if (s.turnsLeft > 0) keep.push(s);
+  }
+  mon.status = keep;
+}
+
+function isStunned(mon: BattleEcoMon) {
+  const has = (mon.status || []).some(s => s.name === 'overload');
+  if (has) {
+    // consume one turn of overload
+    mon.status = (mon.status || []).map(s => s.name==='overload' ? {...s, turnsLeft: s.turnsLeft-1} : s)
+                                   .filter(s => s.turnsLeft > 0);
+  }
+  return has;
+}
+
+function applyEffect(
+  caster: BattleEcoMon,
+  target: BattleEcoMon,
+  ef: AbilityEffect,
+  abilityElement: string,
+  getEff: TypeEffFn,
+  log: string[]
+) {
+  if (ef.chance && Math.random() > ef.chance) return;
+
+  const to = ef.target === 'self' ? caster : target;
+
+  switch (ef.kind) {
+    case 'damage': {
+      const atk = getModifiedStat(caster, 'attack');
+      const def = getModifiedStat(target, 'defense');
+      const base = (ef.value || 0) + Math.floor((ef.scale || 0) * atk);
+      const eff = getEff((caster as any).type, (target as any).type) || 1;
+      const mitigated = Math.max(1, Math.floor(base * eff * (100 / (100 + def))));
+      applyDamage(target, mitigated);
+      log.push(`${caster.name} hits ${target.name} for ${mitigated}.`);
+      break;
+    }
+    case 'heal': {
+      const atk = getModifiedStat(caster, 'attack');
+      const val = (ef.value || 0) + Math.floor((ef.scale || 0) * atk);
+      to.hp = Math.min((to as any).maxHp || to.hp, to.hp + Math.abs(val));
+      log.push(`${caster.name} heals ${to===caster?'self':target.name} for ${Math.abs(val)}.`);
+      break;
+    }
+    case 'shield': {
+      to.shield = (to.shield || 0) + (ef.value || 0);
+      log.push(`${to.name} gains a ${ef.value || 0} shield.`);
+      break;
+    }
+    case 'buff':
+    case 'debuff': {
+      const dir = ef.kind === 'debuff' ? -1 : 1;
+      const amtPct = (ef.value || 0) / 100 * dir;
+      const stat = ef.stat || 'attack';
+      const dur = ef.duration || 2;
+      to.mods = [...(to.mods || []), { stat, amountPct: amtPct, turnsLeft: dur }];
+      log.push(`${to.name} ${dir>0?'gains':'loses'} ${Math.abs(ef.value || 0)}% ${stat} for ${dur} turns.`);
+      break;
+    }
+    case 'status': {
+      const name = ef.statusName!;
+      const dur = ef.duration || 2;
+      const val = ef.value;
+      to.status = [...(to.status || []), { name, value: val, turnsLeft: dur }];
+      log.push(`${to.name} is afflicted with ${name}${val ? ` (${val}/turn)` : ''}.`);
+      break;
+    }
+    case 'energy': {
+      // Optional: handle energy in the battleState updater after this call.
+      break;
+    }
+  }
+}
+
+// Type alias for the effectiveness function
+type TypeEffFn = (attackerType: string, defenderType: string) => number;
 
 export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) {
   const [battleState, setBattleState] = useState<BattleState>({
@@ -347,8 +561,18 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
     setBattleState(prev => ({
       ...prev,
       phase: 'battle',
-      playerEcoMon: { ...selectedEcoMon },
-      opponentEcoMon: { ...opponent },
+      playerEcoMon: {
+        ...selectedEcoMon,
+        shield: selectedEcoMon.shield || 0,
+        mods: selectedEcoMon.mods || [],
+        status: selectedEcoMon.status || []
+      },
+      opponentEcoMon: {
+        ...opponent,
+        shield: opponent.shield || 0,
+        mods: opponent.mods || [],
+        status: opponent.status || []
+      },
       battleLog: [`${selectedEcoMon.name} enters the battle arena!`, `Wild ${opponent.name} appears!`]
     }));
   };
@@ -360,34 +584,35 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
     setBattleState(prev => ({ ...prev, isAnimating: true, selectedAbility: ability }));
     setAnimationText(ability.animation);
 
-    // Calculate damage
-    let damage = ability.damage;
-    if (ability.type === 'attack' && battleState.playerEcoMon && battleState.opponentEcoMon) {
-      const effectiveness = getTypeEffectiveness(battleState.playerEcoMon.type, battleState.opponentEcoMon.type);
-      damage = Math.floor(damage * effectiveness);
-    }
-
-    // Apply ability effect
+    // Apply ability effects
     setTimeout(() => {
       setBattleState(prev => {
         if (!prev.playerEcoMon || !prev.opponentEcoMon) return prev;
 
         const newState = { ...prev };
-        let logMessage = '';
+        const logMessages: string[] = [];
 
-        if (ability.type === 'attack') {
-          newState.opponentEcoMon!.hp = Math.max(0, prev.opponentEcoMon!.hp - damage);
-          logMessage = `${prev.playerEcoMon.name} used ${ability.name}! Dealt ${damage} damage!`;
-        } else if (ability.type === 'heal') {
-          const healAmount = Math.abs(damage);
-          newState.playerEcoMon!.hp = Math.min(prev.playerEcoMon!.maxHp, prev.playerEcoMon!.hp + healAmount);
-          logMessage = `${prev.playerEcoMon.name} used ${ability.name}! Restored ${healAmount} HP!`;
-        } else if (ability.type === 'defense') {
-          logMessage = `${prev.playerEcoMon.name} used ${ability.name}! Defense increased!`;
+        // Check accuracy
+        if (ability.accuracy && Math.random() > ability.accuracy) {
+          logMessages.push(`${prev.playerEcoMon.name}'s ${ability.name} missed!`);
+        } else if (ability.effects && ability.effects.length) {
+          // Use effects system
+          for (const ef of ability.effects) {
+            applyEffect(prev.playerEcoMon, prev.opponentEcoMon, ef, ability.element, getTypeEffectiveness, logMessages);
+          }
+        } else {
+          // Fallback: old single-hit damage calc
+          const atk = getModifiedStat(prev.playerEcoMon, 'attack');
+          const def = getModifiedStat(prev.opponentEcoMon, 'defense');
+          const base = ability.damage ?? 25;
+          const eff = getTypeEffectiveness(prev.playerEcoMon.type, prev.opponentEcoMon.type) ?? 1;
+          const mitigated = Math.max(1, Math.floor(base * eff * (100 / (100 + def))));
+          applyDamage(prev.opponentEcoMon, mitigated);
+          logMessages.push(`${prev.playerEcoMon.name} used ${ability.name}! Dealt ${mitigated} damage.`);
         }
 
         newState.playerEnergy = prev.playerEnergy - ability.energyCost;
-        newState.battleLog = [...prev.battleLog, logMessage];
+        newState.battleLog = [...prev.battleLog, ...logMessages];
         newState.turn = 'opponent';
         newState.isAnimating = false;
         newState.selectedAbility = null;
@@ -421,17 +646,64 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
       setAnimationText('');
     }, 1500);
 
-    // AI turn after delay
+    // Status ticks for both sides at end of player turn
+    setTimeout(() => {
+      setBattleState(prev => {
+        if (!prev.playerEcoMon || !prev.opponentEcoMon) return prev;
+
+        const newState = { ...prev };
+        const statusMessages: string[] = [];
+
+        tickStatuses(prev.playerEcoMon, statusMessages);
+        tickStatuses(prev.opponentEcoMon, statusMessages);
+
+        newState.battleLog = [...prev.battleLog, ...statusMessages];
+
+        return newState;
+      });
+
+      // AI turn after delay (only if opponent is not stunned)
     if (battleState.opponentEcoMon && battleState.opponentEcoMon.hp > 0) {
       setTimeout(() => {
         aiTurn();
       }, 3000);
     }
+    }, 2000);
   };
 
   // AI opponent turn
   const aiTurn = () => {
     if (!battleState.opponentEcoMon || !battleState.playerEcoMon) return;
+
+    // Check if opponent is stunned (overload)
+    if (isStunned(battleState.opponentEcoMon)) {
+      setBattleState(prev => ({
+        ...prev,
+        battleLog: [...prev.battleLog, `${prev.opponentEcoMon!.name} is stunned and skips the turn!`],
+        turn: 'player',
+        playerEnergy: Math.min(prev.maxEnergy, prev.playerEnergy + 1),
+        opponentEnergy: Math.min(prev.maxEnergy, prev.opponentEnergy + 1)
+      }));
+
+      // Status ticks and end turn
+      setTimeout(() => {
+        setBattleState(prev => {
+          if (!prev.playerEcoMon || !prev.opponentEcoMon) return prev;
+
+          const newState = { ...prev };
+          const statusMessages: string[] = [];
+
+          tickStatuses(prev.playerEcoMon, statusMessages);
+          tickStatuses(prev.opponentEcoMon, statusMessages);
+
+          newState.battleLog = [...prev.battleLog, ...statusMessages];
+
+          return newState;
+        });
+      }, 1000);
+
+      return;
+    }
 
     const availableAbilities = battleState.opponentEcoMon.abilities.filter(
       ability => battleState.opponentEnergy >= ability.energyCost
@@ -459,22 +731,29 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
         if (!prev.playerEcoMon || !prev.opponentEcoMon) return prev;
 
         const newState = { ...prev };
-        let damage = selectedAbility.damage;
-        let logMessage = '';
+        const logMessages: string[] = [];
 
-        if (selectedAbility.type === 'attack') {
-          const effectiveness = getTypeEffectiveness(prev.opponentEcoMon.type, prev.playerEcoMon.type);
-          damage = Math.floor(damage * effectiveness);
-          newState.playerEcoMon!.hp = Math.max(0, prev.playerEcoMon!.hp - damage);
-          logMessage = `${prev.opponentEcoMon.name} used ${selectedAbility.name}! Dealt ${damage} damage!`;
-        } else if (selectedAbility.type === 'heal') {
-          const healAmount = Math.abs(damage);
-          newState.opponentEcoMon!.hp = Math.min(prev.opponentEcoMon!.maxHp, prev.opponentEcoMon!.hp + healAmount);
-          logMessage = `${prev.opponentEcoMon.name} used ${selectedAbility.name}! Restored ${healAmount} HP!`;
+        // Check accuracy
+        if (selectedAbility.accuracy && Math.random() > selectedAbility.accuracy) {
+          logMessages.push(`${prev.opponentEcoMon.name}'s ${selectedAbility.name} missed!`);
+        } else if (selectedAbility.effects && selectedAbility.effects.length) {
+          // Use effects system
+          for (const ef of selectedAbility.effects) {
+            applyEffect(prev.opponentEcoMon, prev.playerEcoMon, ef, selectedAbility.element, getTypeEffectiveness, logMessages);
+          }
+        } else {
+          // Fallback: old single-hit damage calc
+          const atk = getModifiedStat(prev.opponentEcoMon, 'attack');
+          const def = getModifiedStat(prev.playerEcoMon, 'defense');
+          const base = selectedAbility.damage ?? 20;
+          const eff = getTypeEffectiveness(prev.opponentEcoMon.type, prev.playerEcoMon.type) ?? 1;
+          const mitigated = Math.max(1, Math.floor(base * eff * (100 / (100 + def))));
+          applyDamage(prev.playerEcoMon, mitigated);
+          logMessages.push(`${prev.opponentEcoMon.name} used ${selectedAbility.name}! Dealt ${mitigated} damage.`);
         }
 
         newState.opponentEnergy = prev.opponentEnergy - selectedAbility.energyCost;
-        newState.battleLog = [...prev.battleLog, logMessage];
+        newState.battleLog = [...prev.battleLog, ...logMessages];
         newState.turn = 'player';
         newState.isAnimating = false;
         newState.playerEnergy = Math.min(prev.maxEnergy, prev.playerEnergy + 1);
@@ -507,6 +786,23 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
 
       setAnimationText('');
     }, 1500);
+
+    // Status ticks for both sides at end of AI turn
+    setTimeout(() => {
+      setBattleState(prev => {
+        if (!prev.playerEcoMon || !prev.opponentEcoMon) return prev;
+
+        const newState = { ...prev };
+        const statusMessages: string[] = [];
+
+        tickStatuses(prev.playerEcoMon, statusMessages);
+        tickStatuses(prev.opponentEcoMon, statusMessages);
+
+        newState.battleLog = [...prev.battleLog, ...statusMessages];
+
+        return newState;
+      });
+    }, 2000);
   };
 
   // Reset battle
@@ -618,12 +914,12 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
               >
                 {/* EcoMon Avatar */}
                 <div style={{
-                  fontSize: '80px',
-                  textAlign: 'center',
-                  marginBottom: '16px',
+                  width: '80px',
+                  height: '80px',
+                  margin: '0 auto 16px',
                   filter: `drop-shadow(0 4px 8px ${getRarityColor(ecomon.rarity)}80)`
                 }}>
-                  {ecomon.avatar}
+                  {renderAvatar(ecomon.avatar, '80px')}
                 </div>
 
                 {/* EcoMon Info */}
@@ -917,11 +1213,12 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
             transition: 'transform 0.3s ease'
           }}>
             <div style={{
-              fontSize: '120px',
-              marginBottom: '16px',
+              width: '120px',
+              height: '120px',
+              margin: '0 auto 16px',
               filter: `drop-shadow(0 8px 16px ${getRarityColor(battleState.opponentEcoMon.rarity)}80)`
             }}>
-              {battleState.opponentEcoMon.avatar}
+              {renderAvatar(battleState.opponentEcoMon.avatar, '120px')}
             </div>
 
             {/* Opponent Info */}
@@ -941,7 +1238,7 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
               </div>
 
               {/* HP Bar */}
-              <div style={{ marginBottom: '8px' }}>
+              <div style={{ marginBottom: '8px', position: 'relative' }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -955,7 +1252,8 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
                   background: 'rgba(255,255,255,0.2)',
                   height: '8px',
                   borderRadius: '4px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  position: 'relative'
                 }}>
                   <div style={{
                     background: battleState.opponentEcoMon.hp > battleState.opponentEcoMon.maxHp * 0.5 ? '#2ecc71' :
@@ -964,8 +1262,70 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
                     width: `${(battleState.opponentEcoMon.hp / battleState.opponentEcoMon.maxHp) * 100}%`,
                     transition: 'width 0.5s ease, background-color 0.3s ease'
                   }} />
+                  {/* Shield overlay */}
+                  {battleState.opponentEcoMon.shield && battleState.opponentEcoMon.shield > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      height: '100%',
+                      width: `${Math.min(100, (battleState.opponentEcoMon.shield / battleState.opponentEcoMon.maxHp) * 100)}%`,
+                      background: 'rgba(52, 152, 219, 0.7)',
+                      borderRadius: '4px',
+                      boxShadow: '0 0 8px rgba(52, 152, 219, 0.5)'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '-15px',
+                        right: '2px',
+                        fontSize: '10px',
+                        color: '#3498db',
+                        fontWeight: 'bold',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                      }}>
+                        🛡️{battleState.opponentEcoMon.shield}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Status Effects */}
+              {battleState.opponentEcoMon.status && battleState.opponentEcoMon.status.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  gap: '4px',
+                  justifyContent: 'center',
+                  marginBottom: '8px'
+                }}>
+                  {battleState.opponentEcoMon.status.map((status, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '2px 6px',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        background: status.name === 'bleed' ? 'rgba(231, 76, 60, 0.8)' :
+                                   status.name === 'regen' ? 'rgba(46, 204, 113, 0.8)' :
+                                   status.name === 'overload' ? 'rgba(155, 89, 182, 0.8)' :
+                                   status.name === 'rust' ? 'rgba(149, 165, 166, 0.8)' :
+                                   'rgba(255, 255, 255, 0.8)',
+                        color: 'white',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                      title={`${status.name}${status.value ? ` (${status.value}/turn)` : ''} - ${status.turnsLeft} turns`}
+                    >
+                      {status.name === 'bleed' ? '🩸' :
+                       status.name === 'regen' ? '🌿' :
+                       status.name === 'overload' ? '💫' :
+                       status.name === 'rust' ? '🧲' :
+                       status.name === 'crack' ? '🪩' : '?'}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Energy */}
               <div style={{
@@ -998,11 +1358,12 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
             transition: 'transform 0.3s ease'
           }}>
             <div style={{
-              fontSize: '120px',
-              marginBottom: '16px',
+              width: '120px',
+              height: '120px',
+              margin: '0 auto 16px',
               filter: `drop-shadow(0 8px 16px ${getRarityColor(battleState.playerEcoMon.rarity)}80)`
             }}>
-              {battleState.playerEcoMon.avatar}
+              {renderAvatar(battleState.playerEcoMon.avatar, '120px')}
             </div>
 
             {/* Player Info */}
@@ -1022,7 +1383,7 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
               </div>
 
               {/* HP Bar */}
-              <div style={{ marginBottom: '8px' }}>
+              <div style={{ marginBottom: '8px', position: 'relative' }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -1036,7 +1397,8 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
                   background: 'rgba(255,255,255,0.2)',
                   height: '8px',
                   borderRadius: '4px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  position: 'relative'
                 }}>
                   <div style={{
                     background: battleState.playerEcoMon.hp > battleState.playerEcoMon.maxHp * 0.5 ? '#2ecc71' :
@@ -1045,8 +1407,70 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
                     width: `${(battleState.playerEcoMon.hp / battleState.playerEcoMon.maxHp) * 100}%`,
                     transition: 'width 0.5s ease, background-color 0.3s ease'
                   }} />
+                  {/* Shield overlay */}
+                  {battleState.playerEcoMon.shield && battleState.playerEcoMon.shield > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      height: '100%',
+                      width: `${Math.min(100, (battleState.playerEcoMon.shield / battleState.playerEcoMon.maxHp) * 100)}%`,
+                      background: 'rgba(52, 152, 219, 0.7)',
+                      borderRadius: '4px',
+                      boxShadow: '0 0 8px rgba(52, 152, 219, 0.5)'
+                    }}>
+                      <div style={{
+                        position: 'absolute',
+                        top: '-15px',
+                        right: '2px',
+                        fontSize: '10px',
+                        color: '#3498db',
+                        fontWeight: 'bold',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                      }}>
+                        🛡️{battleState.playerEcoMon.shield}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Status Effects */}
+              {battleState.playerEcoMon.status && battleState.playerEcoMon.status.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  gap: '4px',
+                  justifyContent: 'center',
+                  marginBottom: '8px'
+                }}>
+                  {battleState.playerEcoMon.status.map((status, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '2px 6px',
+                        borderRadius: '8px',
+                        fontSize: '10px',
+                        fontWeight: 'bold',
+                        background: status.name === 'bleed' ? 'rgba(231, 76, 60, 0.8)' :
+                                   status.name === 'regen' ? 'rgba(46, 204, 113, 0.8)' :
+                                   status.name === 'overload' ? 'rgba(155, 89, 182, 0.8)' :
+                                   status.name === 'rust' ? 'rgba(149, 165, 166, 0.8)' :
+                                   'rgba(255, 255, 255, 0.8)',
+                        color: 'white',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }}
+                      title={`${status.name}${status.value ? ` (${status.value}/turn)` : ''} - ${status.turnsLeft} turns`}
+                    >
+                      {status.name === 'bleed' ? '🩸' :
+                       status.name === 'regen' ? '🌿' :
+                       status.name === 'overload' ? '💫' :
+                       status.name === 'rust' ? '🧲' :
+                       status.name === 'crack' ? '🪩' : '?'}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Energy */}
               <div style={{
@@ -1226,7 +1650,7 @@ export default function EcoMonBattle({ onReturnToHub }: EcoMonBattleProps = {}) 
               overflow: 'hidden'
             }}>
               <img
-                src="/assets/noob.jpeg"
+                src="/assets/noob.jpg"
                 alt="Your Monster"
                 style={{
                   width: '100%',

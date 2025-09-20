@@ -46,7 +46,7 @@ const SAMPLE_FRIENDS: Friend[] = [
     },
     currentMonster: {
       name: 'PlasticEater Alpha',
-      image: '/assets/m1.jpeg',
+      image: '/assets/m1.png',
       level: 18,
       hp: 100,
       maxHp: 100
@@ -68,7 +68,7 @@ const SAMPLE_FRIENDS: Friend[] = [
     },
     currentMonster: {
       name: 'MetalCrusher Beta',
-      image: '/assets/m2.jpeg',
+      image: '/assets/m2.png',
       level: 25,
       hp: 100,
       maxHp: 100
@@ -112,7 +112,7 @@ const SAMPLE_FRIENDS: Friend[] = [
     },
     currentMonster: {
       name: 'PaperShredder Delta',
-      image: '/assets/m3.jpeg',
+      image: '/assets/m3.png',
       level: 22,
       hp: 100,
       maxHp: 100
@@ -134,7 +134,7 @@ const SAMPLE_FRIENDS: Friend[] = [
     },
     currentMonster: {
       name: 'ElectroDigester Epsilon',
-      image: '/assets/m4.jpeg',
+      image: '/assets/m4.png',
       level: 12,
       hp: 100,
       maxHp: 100
@@ -694,7 +694,7 @@ export default function SocialBattle() {
             overflow: 'hidden'
           }}>
             <img
-              src="/assets/noob.jpeg"
+              src="/assets/noob.jpg"
               alt="Your Monster"
               style={{
                 width: '100%',

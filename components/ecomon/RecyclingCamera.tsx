@@ -593,7 +593,7 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
             margin: '0 auto 24px auto'
           }}>
             <img
-              src="/assets/noob.jpeg"
+              src="/assets/noob.jpg"
               alt="Noob Monster"
               style={{
                 width: '100%',

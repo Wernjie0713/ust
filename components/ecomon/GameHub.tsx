@@ -220,15 +220,15 @@ export default function GameHub({ onViewChange }: GameHubProps) {
   const getMonsterImage = (id: string, type: string): string => {
     // Map EcoMon IDs to local monster images
     const imageMap: { [key: string]: string } = {
-      'ecomon_001': '/assets/m1.jpeg',
-      'ecomon_002': '/assets/m2.jpeg',
-      'ecomon_003': '/assets/m3.jpeg',
-      'ecomon_004': '/assets/m4.jpeg',
-      'ecomon_005': '/assets/m5.jpeg'
+      'ecomon_001': '/assets/m1.png',
+      'ecomon_002': '/assets/m2.png',
+      'ecomon_003': '/assets/m3.png',
+      'ecomon_004': '/assets/m4.png',
+      'ecomon_005': '/assets/m5.png'
     };
 
-    // Return the mapped image or default to m1.jpeg if not found
-    return imageMap[id] || '/assets/m1.jpeg';
+    // Return the mapped image or default to m1.png if not found
+    return imageMap[id] || '/assets/m1.png';
   };
 
   const getTypeEmoji = (type: string): string => {
@@ -396,16 +396,52 @@ export default function GameHub({ onViewChange }: GameHubProps) {
           margin: '0 20px 20px 20px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
         }}>
-          <h1 style={{
-            color: 'white',
-            textAlign: 'center',
-            margin: '0 0 20px 0',
-            fontSize: '28px',
-            fontWeight: 'bold',
-            textShadow: '0 4px 8px rgba(0,0,0,0.3)'
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            margin: '0 0 20px 0'
           }}>
-            🎒 My Collection
-          </h1>
+            <h1 style={{
+              color: 'white',
+              textAlign: 'center',
+              margin: '0',
+              fontSize: '28px',
+              fontWeight: 'bold',
+              textShadow: '0 4px 8px rgba(0,0,0,0.3)'
+            }}>
+              🎒 My Collection
+            </h1>
+            <button
+              onClick={() => window.location.href = '/dex'}
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderRadius: '16px',
+                padding: '8px 16px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+              }}
+            >
+              📚 Open EcoDex
+            </button>
+          </div>
 
           {/* Search Bar */}
           <input
