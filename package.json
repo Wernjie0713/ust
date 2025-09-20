@@ -3,25 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "scan:banned": "node -e \"const fs=require('fs');const {execSync}=require('child_process');const files=execSync('git ls-files -z').toString().split('\\0').filter(Boolean).filter(f=>!f.includes('package.json')&&!f.includes('package-lock.json')&&!f.includes('reports/')&&!f.includes('node_modules/'));const bad=/(iota|tangle|did|firefly|shimmer|hornet|stardust|wallet\\.rs|identity\\.rs|streams)/i;const hits=[];for(const f of files){try{const t=fs.readFileSync(f,'utf8');if(bad.test(t))hits.push(f);}catch{}}if(hits.length){console.error('BANNED TERMS FOUND:\\n'+hits.join('\\n'));process.exit(1)}console.log('No banned terms.')\"",
+    "smoke": "node scripts/smoke.js",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "mapbox-gl": "^3.15.0",
+    "next": "15.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.3"
+    "react-icons": "^5.5.0",
+    "threebox-plugin": "^2.2.7"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
