@@ -284,10 +284,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           console.log('Available commands tried:', pythonCommands);
           resolve({
             success: true,
-            category: 'cardboard',
+            category: 'plastic',
             categoryConfidence: 0.75,
-            weightGrams: 180,
-            weightFormatted: '180.0 grams',
+            weightGrams: 80,
+            weightFormatted: '80.0 grams',
             weightCategory: 'Lightweight',
             error: 'Python not found, using demo data'
           });

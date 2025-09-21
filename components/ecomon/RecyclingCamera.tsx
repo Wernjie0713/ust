@@ -233,7 +233,7 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
             weightCategory: 'Medium'
           }
         });
-      }, 200000); // Increased from 5 seconds to 20 seconds
+      }, 300000); // Increased from 5 seconds to 20 seconds
     });
 
     // Create the main processing promise using our AI analysis API
