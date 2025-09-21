@@ -391,93 +391,71 @@ const SAMPLE_RECYCLING_BINS: RecyclingBin[] = [
     modelType: 'pokestopgrey'
   },
 
-  // Melaka Area - For users in Melaka
+  // Cyberjaya Area =
   {
-    id: 'bin_016_melaka',
-    name: 'Melaka Central Eco Hub',
-    coordinates: [102.24997, 2.19616], // Melaka Central
-    wasteTypes: ['plastic', 'metal', 'paper'],
-    capacity: 120,
-    currentLevel: 60,
-    lastEmptied: '2024-07-19T08:00:00Z',
-    rewards: { ecoPoints: 55, ecoTokens: 6 },
+    id: 'bin_017_cyber',
+    name: 'Cyberjaya Central Park Eco Hub',
+    coordinates: [101.65044, 2.92250],
+    wasteTypes: ['plastic', 'paper', 'glass'],
+    capacity: 100,
+    currentLevel: 50,
+    lastEmptied: '2024-07-19T09:00:00Z',
+    rewards: { ecoPoints: 55, ecoTokens: 5 },
     modelType: 'pokestop',
     bonus: {
       active: true,
       multiplier: 2,
       type: 'double_points',
-      description: '2x EcoPoints - Historic City Bonus!',
+      description: '2x EcoPoints - Weekend in Cyberjaya!',
       expiresAt: '2024-07-25T18:00:00Z'
     }
   },
   {
-    id: 'bin_017_melaka',
-    name: 'Jonker Street Green Corner',
-    coordinates: [102.24583, 2.19444], // Jonker Street area
-    wasteTypes: ['paper', 'glass', 'organic'],
+    id: 'bin_018_cyber',
+    name: 'MMU Cyberjaya Green Corner',
+    coordinates: [101.64140, 2.92730],
+    wasteTypes: ['electronic', 'battery', 'metal'],
     capacity: 80,
     currentLevel: 35,
-    lastEmptied: '2024-07-19T10:30:00Z',
-    rewards: { ecoPoints: 45, ecoTokens: 5 },
+    lastEmptied: '2024-07-19T11:30:00Z',
+    rewards: { ecoPoints: 60, ecoTokens: 6 },
     modelType: 'pokestopgrey'
   },
   {
-    id: 'bin_018_melaka',
-    name: 'A Famosa Recycling Station',
-    coordinates: [102.24306, 2.18944], // Near A Famosa
-    wasteTypes: ['plastic', 'metal', 'textile'],
-    capacity: 100,
-    currentLevel: 40,
-    lastEmptied: '2024-07-19T09:00:00Z',
-    rewards: { ecoPoints: 50, ecoTokens: 5 },
+    id: 'bin_019_cyber',
+    name: 'Dpulze Shopping Centre Eco Point',
+    coordinates: [101.65430, 2.92220],
+    wasteTypes: ['plastic', 'cardboard', 'organic'],
+    capacity: 120,
+    currentLevel: 70,
+    lastEmptied: '2024-07-18T21:00:00Z',
+    rewards: { ecoPoints: 65, ecoTokens: 7 },
     modelType: 'pokestop',
     bonus: {
       active: true,
       multiplier: 3,
       type: 'triple_points',
-      description: '3x Points - Tourist Zone Special!',
-      expiresAt: '2024-07-22T15:00:00Z'
-    }
-  },
-  {
-    id: 'bin_019_melaka',
-    name: 'Dataran Pahlawan Eco Point',
-    coordinates: [102.24861, 2.20056], // Dataran Pahlawan area
-    wasteTypes: ['electronic', 'battery', 'metal'],
-    capacity: 90,
-    currentLevel: 25,
-    lastEmptied: '2024-07-19T14:00:00Z',
-    rewards: { ecoPoints: 60, ecoTokens: 6 },
-    modelType: 'pokestopgrey'
-  },
-  {
-    id: 'bin_020_melaka',
-    name: 'Melaka Gateway Green Hub',
-    coordinates: [102.25278, 2.20833], // Melaka Gateway area
-    wasteTypes: ['plastic', 'paper', 'glass'],
-    capacity: 150,
-    currentLevel: 85,
-    lastEmptied: '2024-07-18T20:00:00Z',
-    rewards: { ecoPoints: 70, ecoTokens: 7 },
-    modelType: 'pokestop',
-    bonus: {
-      active: true,
-      multiplier: 2,
-      type: 'bonus_tokens',
-      description: '+10 Bonus EcoTokens - Mall Special!',
+      description: '3x Points - Mall Recycling Drive!',
       expiresAt: '2024-07-24T12:00:00Z'
     }
   },
   {
-    id: 'bin_021_melaka',
-    name: 'Taman Melaka Raya Eco Station',
-    coordinates: [102.23889, 2.20278], // Taman Melaka Raya
-    wasteTypes: ['organic', 'paper', 'cardboard'],
-    capacity: 110,
-    currentLevel: 50,
-    lastEmptied: '2024-07-19T07:30:00Z',
-    rewards: { ecoPoints: 50, ecoTokens: 5 },
-    modelType: 'pokestopgrey'
+    id: 'bin_020_cyber_tesla',
+    name: 'Tesla Supercharger Cyberjaya Eco Hub',
+    coordinates: [101.65000, 2.92200], // approximate location near 23A Persiaran APEC, Cyberjaya :contentReference[oaicite:0]{index=0}
+    wasteTypes: ['plastic', 'paper', 'metal'],
+    capacity: 100,
+    currentLevel: 20,
+    lastEmptied: '2024-07-19T08:00:00Z',
+    rewards: { ecoPoints: 60, ecoTokens: 6 },
+    modelType: 'pokestopgrey',
+    bonus: {
+      active: true,
+      multiplier: 2,
+      type: 'double_points',
+      description: '2x EcoPoints at Tesla Supercharger!',
+      expiresAt: '2024-07-26T18:00:00Z'
+    }
   }
 ];
 

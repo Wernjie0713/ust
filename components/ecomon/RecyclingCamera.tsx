@@ -27,6 +27,8 @@ interface CaptureResult {
     confidence: number;
     wasteType: string;
     estimatedWeight: number;
+    weightFormatted?: string;
+    weightCategory?: string;
   };
 }
 
@@ -207,7 +209,7 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
   const processCapture = async (imageBlob: Blob) => {
     setCameraState(prev => ({ ...prev, isAnalyzing: true }));
 
-    // Create a timeout promise that resolves after 5 seconds with fallback data
+    // Create a timeout promise that resolves after 20 seconds with fallback data
     const timeoutPromise = new Promise<CaptureResult>((resolve) => {
       setTimeout(() => {
         console.log('AI analysis timeout - using fallback values');
@@ -226,175 +228,82 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
           aiAnalysis: {
             confidence: 85,
             wasteType: 'plastic',
-            estimatedWeight: 250
+            estimatedWeight: 250,
+            weightFormatted: '250.0 grams',
+            weightCategory: 'Medium'
           }
         });
-      }, 5000); // 5 second timeout
+      }, 200000); // Increased from 5 seconds to 20 seconds
     });
 
-    // Create the main processing promise
+    // Create the main processing promise using our AI analysis API
     const processingPromise = new Promise<CaptureResult>((resolve, reject) => {
       try {
-        // Convert blob to base64 for demo
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          try {
-            const base64 = reader.result as string;
-            const photoHash = btoa(base64.substring(0, 100)); // Simple hash for demo
+        // Create FormData to send image to API
+        const formData = new FormData();
+        formData.append('image', imageBlob, 'captured_image.jpg');
 
-            // First attempt: Try OpenAI Vision API for waste recognition
-            let openAIResult = null;
-            try {
-              console.log('🤖 Attempting OpenAI Vision API analysis...');
-
-              const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY || 'your-api-key-here'}`
-                },
-                body: JSON.stringify({
-                  model: "gpt-4-vision-preview",
-                  messages: [
-                    {
-                      role: "user",
-                      content: [
-                        {
-                          type: "text",
-                          text: "Analyze this waste/recycling item image. Identify: 1) Waste type (plastic, metal, glass, paper, organic, electronic, hazardous, or unknown), 2) Estimated weight in grams, 3) Confidence level (0-100). Respond in JSON format: {\"wasteType\": \"type\", \"estimatedWeight\": number, \"confidence\": number, \"description\": \"brief description\"}"
-                        },
-                        {
-                          type: "image_url",
-                          image_url: {
-                            url: base64
-                          }
-                        }
-                      ]
-                    }
-                  ],
-                  max_tokens: 300
-                })
-              });
-
-              if (openAIResponse.ok) {
-                const openAIData = await openAIResponse.json();
-                const content = openAIData.choices[0]?.message?.content;
-
-                if (content) {
-                  try {
-                    openAIResult = JSON.parse(content);
-                    console.log('✅ OpenAI analysis successful:', openAIResult);
-                  } catch (parseError) {
-                    console.log('⚠️ OpenAI response parsing failed:', parseError);
-                  }
-                }
-              } else {
-                console.log('⚠️ OpenAI API request failed:', openAIResponse.status, openAIResponse.statusText);
-              }
-            } catch (openAIError) {
-              console.log('⚠️ OpenAI API call failed:', openAIError.message);
-            }
-
-            // Submit to backend
-            const user = getCurrentUser();
-
-            // Create demo user if not authenticated
-            const demoUser = user || {
-              id: `demo_${Date.now()}`,
-              userId: `user_demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              displayName: 'Demo User',
-              level: 1,
-              ecoPoints: 0,
-              ecoTokens: 0
-            };
-
-            const recyclingData = {
-              userId: demoUser.userId || `temp_${demoUser.id}`,
-              itemType: openAIResult?.wasteType || 'plastic', // Use OpenAI result or fallback
-              quantity: openAIResult?.estimatedWeight || Math.floor(Math.random() * 500) + 100, // Use OpenAI weight or random
-              location: {
-                latitude: 3.118797763043589,
-                longitude: 101.67396958477904
-              },
-              binId: binId || 'unknown',
-              photoHash: photoHash,
-              photoMetadata: {
-                resolution: '1920x1080',
-                fileSize: imageBlob.size,
-                format: 'JPEG',
-                timestamp: new Date().toISOString()
-              },
-              // Include OpenAI analysis if available
-              openAIAnalysis: openAIResult ? {
-                confidence: openAIResult.confidence,
-                description: openAIResult.description,
-                source: 'openai-vision'
-              } : null
-            };
-
-            // Try to submit to backend, but fallback to demo mode if it fails
-            let result;
-            try {
-              const response = await fetch('http://localhost:3003/api/recycle', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(recyclingData)
-              });
-
-              if (response.ok) {
-                result = await response.json();
-              } else {
-                throw new Error('Backend not available');
-              }
-            } catch (backendError) {
-              console.log('Backend not available, using demo mode');
-              // Create demo result with OpenAI data if available
-              result = {
-                success: true,
-                data: {
-                  actionId: `demo_${Date.now()}`,
-                  rewards: {
-                    ecoPoints: Math.floor(Math.random() * 100) + 50,
-                    ecoTokens: Math.floor(Math.random() * 10) + 5
-                  },
-                  aiAnalysis: {
-                    confidence: openAIResult?.confidence || Math.floor(Math.random() * 30) + 70,
-                    wasteType: recyclingData.itemType,
-                    estimatedWeight: recyclingData.quantity,
-                    source: openAIResult ? 'openai-vision' : 'demo-fallback',
-                    description: openAIResult?.description || 'Demo analysis'
-                  },
-                  ecoMon: Math.random() < 0.3 ? {
-                    ecoMonId: `ecomon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    type: 'PlasticEater',
-                    rarity: 'rare'
-                  } : undefined
-                }
-              };
-            }
-
-            if (result.success) {
-              const captureResult: CaptureResult = {
-                success: true,
-                actionId: result.data.actionId,
-                rewards: result.data.rewards,
-                ecoMon: result.data.ecoMon,
-                aiAnalysis: result.data.aiAnalysis
-              };
-
-              resolve(captureResult);
-            } else {
-              reject(new Error(result.error || 'Capture failed'));
-            }
-          } catch (error) {
-            reject(error);
+        // Call our AI analysis API
+        fetch('/api/analyze-rubbish', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
           }
-        };
+          return response.json();
+        })
+        .then(analysisResult => {
+          console.log('✅ AI Analysis Result:', analysisResult);
 
-        reader.onerror = () => reject(new Error('Failed to read image'));
-        reader.readAsDataURL(imageBlob);
+          if (analysisResult.success) {
+            // Calculate rewards based on waste type and weight
+            const basePoints = 50;
+            const weightMultiplier = Math.max(1, Math.floor(analysisResult.weightGrams / 100));
+            const categoryMultiplier = analysisResult.category === 'plastic' ? 1.2 : 
+                                     analysisResult.category === 'metal' ? 1.5 :
+                                     analysisResult.category === 'glass' ? 1.3 : 1.0;
+            
+            const ecoPoints = Math.floor(basePoints * weightMultiplier * categoryMultiplier);
+            const ecoTokens = Math.floor(ecoPoints / 10) + Math.floor(Math.random() * 5) + 3;
+
+            // Determine if EcoMon is captured (higher chance for rarer materials)
+            const ecoMonChance = analysisResult.category === 'battery' ? 0.4 :
+                                 analysisResult.category === 'metal' ? 0.3 :
+                                 analysisResult.category === 'glass' ? 0.25 : 0.15;
+            
+            const captureResult: CaptureResult = {
+              success: true,
+              actionId: `ai_${Date.now()}`,
+              rewards: {
+                ecoPoints,
+                ecoTokens
+              },
+              ecoMon: Math.random() < ecoMonChance ? {
+                ecoMonId: `ecomon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: `${analysisResult.category.charAt(0).toUpperCase() + analysisResult.category.slice(1)}Mon`,
+                rarity: analysisResult.weightGrams > 500 ? 'rare' : 
+                       analysisResult.weightGrams > 200 ? 'uncommon' : 'common'
+              } : undefined,
+              aiAnalysis: {
+                confidence: Math.floor(analysisResult.categoryConfidence * 100),
+                wasteType: analysisResult.category,
+                estimatedWeight: Math.floor(analysisResult.weightGrams),
+                weightFormatted: analysisResult.weightFormatted,
+                weightCategory: analysisResult.weightCategory
+              }
+            };
+
+            resolve(captureResult);
+          } else {
+            throw new Error(analysisResult.error || 'Analysis failed');
+          }
+        })
+        .catch(error => {
+          console.error('AI analysis error:', error);
+          reject(error);
+        });
 
       } catch (error) {
         reject(error);
@@ -413,7 +322,7 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
       setAnalysisStage('complete');
 
       // Show analysis results briefly (1.5 seconds)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Show upgrade animation if EcoMon was generated (briefly)
       if (result.ecoMon) {
@@ -444,7 +353,9 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
         aiAnalysis: {
           confidence: 60,
           wasteType: 'unknown',
-          estimatedWeight: 200
+          estimatedWeight: 200,
+          weightFormatted: '200.0 grams',
+          weightCategory: 'Medium'
         }
       };
 
@@ -671,15 +582,33 @@ export default function RecyclingCamera({ binId, onCapture, onClose }: CameraPro
             {captureResult.aiAnalysis && (
               <div style={{
                 fontSize: '14px',
-                color: 'rgba(255,255,255,0.8)',
-                background: 'rgba(255,255,255,0.1)',
-                padding: '12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.2)'
+                color: 'rgba(255,255,255,0.9)',
+                background: 'rgba(255,255,255,0.15)',
+                padding: '16px',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.3)',
+                marginBottom: '8px'
               }}>
-                <div>🤖 AI Confidence: {captureResult.aiAnalysis.confidence}%</div>
-                <div>♻️ Waste Type: {captureResult.aiAnalysis.wasteType}</div>
-                <div>⚖️ Weight: {captureResult.aiAnalysis.estimatedWeight}g</div>
+                <div style={{ 
+                  fontSize: '16px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '8px',
+                  color: '#4CAF50'
+                }}>
+                  🤖 AI Analysis Results
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  🏷️ <strong>Category:</strong> {captureResult.aiAnalysis.wasteType.charAt(0).toUpperCase() + captureResult.aiAnalysis.wasteType.slice(1)}
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  ⚖️ <strong>Weight:</strong> {captureResult.aiAnalysis.weightFormatted || `${captureResult.aiAnalysis.estimatedWeight}g`}
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  📊 <strong>Category:</strong> {captureResult.aiAnalysis.weightCategory || 'Unknown'}
+                </div>
+                <div>
+                  🎯 <strong>Confidence:</strong> {captureResult.aiAnalysis.confidence}%
+                </div>
               </div>
             )}
           </div>
